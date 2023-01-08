@@ -192,7 +192,7 @@ plot_play_with_pressure_probability = function(game_id, play_id,
   # play_id = 1182
   # team_pressure_df = raw_team_level_pressure_probs %>% filter(game_play_id == paste(game_id, play_id, sep='-')) %>% select(game_play_id, frame_id, prob)
   # rusher_pressure_df = raw_rusher_level_pressure_probs %>% filter(game_play_id == paste(game_id, play_id, sep='-')) %>% select(game_play_id, frame_id, rush_id, prob)
-  
+
   # Collect data
   tracking_data = fe_tracking %>% filter(gameId == game_id, playId == play_id)
   play_metadata = plays %>% filter(gameId == game_id, playId == play_id)
@@ -222,7 +222,8 @@ plot_play_with_pressure_probability = function(game_id, play_id,
     rename(frameId = frame_id) %>% 
     mutate(nflId = 'QB', jerseyNumber = 'QB')
   
-  probability_df_side_plot = bind_rows(rusher_prob_with_jersey, qb_prob_formatted)
+  probability_df_side_plot = bind_rows(rusher_prob_with_jersey, qb_prob_formatted) %>%
+    arrange(desc(jerseyNumber))
   
   MIN_X = min(tracking_data$xNorm)
   MAX_X = max(tracking_data$xNorm)
@@ -241,7 +242,7 @@ plot_play_with_pressure_probability = function(game_id, play_id,
   # Get relevant information
   play_description = play_metadata$playDescription
   yardline_100 = ifelse(play_metadata$possessionTeam == play_metadata$yardlineSide, 100 - play_metadata$yardlineNumber, play_metadata$yardlineNumber)
-  game_state = paste0('Quarter: ', play_metadata$quarter, '. Yards to EndZone: ', yardline_100, '. Down: ', play_metadata$down, '. Ydstogo: ', play_metadata$yardsToGo)
+  game_state = paste0('Q', play_metadata$quarter, ', Yds to EndZone: ', yardline_100, '. ', play_metadata$down, ' & ', play_metadata$yardsToGo, 'ydstogo')
   
   dot_plot = ggplot(tracking_data, aes(x = yNorm, y = xNorm)) +
     vertical_field_theme() + 
@@ -262,7 +263,7 @@ plot_play_with_pressure_probability = function(game_id, play_id,
     geom_point(data = ball_tracking, fill = 'brown', shape=18, size = 5) + 
     
     # Add title containing play information
-    labs(title = paste0("Play ", game_id, '-', play_id, '. Game State: ', game_state),
+    labs(title = paste0("Play ", game_id, '-', play_id, '. ', game_state),
          subtitle = play_description,
          fill = 'Pressure Prob') + 
     
@@ -284,6 +285,7 @@ plot_play_with_pressure_probability = function(game_id, play_id,
          y = 'Pressure Probability',
          colour = 'Player Pressure Probability') +
     ylim(c(0,1)) +
+    scale_colour_discrete(limits = unique(probability_df_side_plot$jerseyNumber)) +
     geom_vline(xintercept = snap_frame, colour = 'red', linetype = 'dashed', size = 0.5) + 
     geom_vline(xintercept = rush_end_frame, colour = 'red', linetype = 'dashed', size = 0.5) + 
     transition_reveal(frameId) 
@@ -300,6 +302,13 @@ plot_play_with_pressure_probability = function(game_id, play_id,
     
   }
   
+  # Add 3 seconds at the end so it freezes on the final image
+  last_frame = max(tracking_data$frameId)
+  final_image = image_append(c(animated_dot_plot[last_frame], animated_probability_plot[last_frame]))
+  for (i in 1:30) {
+    new_gif = c(new_gif, final_image)
+  }  
+  
   if (!is.null(output_file_name)) {
     image_write(new_gif, path = output_file_name, format = "gif")
     
@@ -310,16 +319,17 @@ plot_play_with_pressure_probability = function(game_id, play_id,
 }
 
 # Sample plays
-generate_play_art_from_game_play_id = function(game_play_id, team_level_df, rusher_level_df, output_file_name=NULL) {
+generate_play_art_from_game_play_id = function(input_game_play_id, team_level_df, rusher_level_df, output_file_name=NULL) {
   # Function to get the required probabilities from dataframe and plot
   
-  play_and_id = strsplit(game_play_id, split='-')
+  play_and_id = strsplit(input_game_play_id, split='-')
+  
   team_pressure_probs = team_level_df %>% 
-    filter(game_play_id == game_play_id) %>% 
+    filter(game_play_id == input_game_play_id) %>% 
     select(game_play_id, frame_id, prob)
   
   rusher_pressure_probs = rusher_level_df %>%
-    filter(game_play_id == game_play_id) %>% 
+    filter(game_play_id == input_game_play_id) %>% 
     select(game_play_id, frame_id, rush_id, prob)
   
   play_art = plot_play_with_pressure_probability(play_and_id[[1]][1], play_and_id[[1]][2], 
@@ -337,18 +347,5 @@ raw_rusher_level_pressure_probs = read_csv('output/models/rusher_level_hhs_per_f
 # play1_horiz = plot_play_dots(2021090900, 97, vert=FALSE)
 
 # Example (with QB and Rusher pressure probabilities)
-play1 = generate_play_art_from_game_play_id('2021090900-97', raw_team_level_pressure_probs, raw_rusher_level_pressure_probs)
-
-# Sample regular plots
-
-
-# Sample plots showing the prob of QB pressure (you need to provide your own dataframe containing the probability of pressure at each frame)
-# sample_play1_probabilities = test_with_predicted %>%
-#   filter(game_play_id == '2021103106-1333') %>%
-#   select(frame_id, prob)
-# 
-# sample_play1_double = plot_play_with_team_level_hurry_probability(2021103106, 1333, sample_play1_probabilities)
-
-# Sample plots showing the prob of QB pressure (you need to provide your own dataframe containing the probability of pressure at each frame for each rusher)
-# play1_art = generate_play_art_from_id('2021091203-601', players_with_predicted, 'output/plots/play-2021091203-601-burrow-instant-sack.gif')
-# play1_art
+# play1 = generate_play_art_from_game_play_id('2021091203-601', raw_team_level_pressure_probs, raw_rusher_level_pressure_probs, 'output/plots/play-2021091203-601-burrow-sack.gif')
+# play2 = generate_play_art_from_game_play_id('2021092607-2923', raw_team_level_pressure_probs, raw_rusher_level_pressure_probs, 'output/plots/play-2021092607-2923-roethlisberger-protected.gif')

@@ -49,4 +49,11 @@ po/*~
 rsconnect/
 
 data/**
-output/**
+output/features/**
+output/models/**
+output/plots/old_style/**
+output/plots/rusher_probs_only/**
+
+*.zip
+
+
