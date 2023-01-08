@@ -7,6 +7,9 @@ library(xgboost) # Model training
 library(magick) # Animated plots
 library(plotly) # Interactive plots 
 library(xgboost) # model training
+library(pROC) # Get ROC AUC
+library(ModelMetrics) # Get Brier Score
+library(kableExtra)
 
 set.seed(335)
 
@@ -50,7 +53,6 @@ preprocessing_summary = fe_tracking %>%
   summarize(rows = n(), 
             num_during = sum(occurs_during_pass_rush))
 
-# Join jersey numbers to the players df
+# Join jersey numbers to the players df (some players have worn two numbers - we just include one for simplicity sake)
 unique_jersey_numbers = fe_tracking %>% select(nflId, jerseyNumber) %>% distinct()
 players = players %>% left_join(unique_jersey_numbers, by='nflId') %>% group_by(nflId) %>% filter(row_number() == 1)
-# Note, some players have worn two numbers - we just include one for simplicity sake
