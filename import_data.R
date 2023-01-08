@@ -55,5 +55,5 @@ preprocessing_summary = fe_tracking %>%
             num_during = sum(occurs_during_pass_rush))
 
 # Join jersey numbers to the players df (some players have worn two numbers - we just include one for simplicity sake)
-unique_jersey_numbers = fe_tracking %>% select(nflId, jerseyNumber) %>% distinct()
+unique_jersey_numbers = fe_tracking %>% select(nflId, team, jerseyNumber) %>% distinct()
 players = players %>% left_join(unique_jersey_numbers, by='nflId') %>% group_by(nflId) %>% filter(row_number() == 1)
