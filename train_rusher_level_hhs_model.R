@@ -1,6 +1,6 @@
 
 # Train pass rusher model - the probability of each rusher at each frame getting a sack
-pass_rush_sack_features = read_csv('output/features/rusher_level_hhs_on_play_features_20230107_223643.csv')
+pass_rush_sack_features = read_csv('output/features/rusher_level_hhs_on_play_features_20230108_124133.csv')
 
 # Split dataset into train and test. Use Weeks 1-6 for train, Weeks 7-8 for test.
 
@@ -18,15 +18,15 @@ test_set = formatted_training_data %>% filter(str_detect(game_play_id, paste(tes
 
 TARGET_VARIABLE = 'hit_hurry_or_sack'
 
-training_x = training_set[, 4:105]
+training_x = training_set[, 4:80]
 training_y = training_set[, TARGET_VARIABLE]
 training_weights = training_set[, 'frame_weight']
 
-test_x = test_set[, 4:105]
+test_x = test_set[, 4:80]
 test_y = test_set[, TARGET_VARIABLE]
 test_weights = test_set[, 'frame_weight']
 
-total_x = formatted_training_data[, 4:105]
+total_x = formatted_training_data[, 4:80]
 total_y = formatted_training_data[, TARGET_VARIABLE]
 total_weights = formatted_training_data[, 'frame_weight']
 
@@ -63,14 +63,14 @@ raw_test_values = predict(model_object, as.matrix(test_x))
 test_values = test_set %>%
   ungroup() %>%
   mutate(prob = raw_test_values) %>%
-  select(game_play_id, frameId, hit_hurry_or_sack, prob)
-write.csv(test_values, TEST_PROBS_OUTPUT_NAME)
+  select(game_play_id, frame_id, rush_id, hit_hurry_or_sack, prob)
+write.csv(test_values, TEST_PROBS_OUTPUT_NAME, row.names = FALSE)
 
 # Values with predicted
 raw_total_values = predict(model_object, as.matrix(total_x))
 total_values = formatted_training_data %>%
   ungroup() %>%
   mutate(prob = raw_total_values) %>%
-  select(game_play_id, frameId, hit_hurry_or_sack, prob)
+  select(game_play_id, frame_id, rush_id, hit_hurry_or_sack, prob)
 
-write.csv(total_values, TOTAL_PROBS_OUTPUT_NAME)
+write.csv(total_values, TOTAL_PROBS_OUTPUT_NAME, row.names = FALSE)

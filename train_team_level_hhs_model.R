@@ -77,7 +77,7 @@ test_values = test_set %>%
   ungroup() %>%
   mutate(prob = raw_test_values) %>%
   select(game_play_id, frame_id, hit_hurry_or_sack, prob)
-write.csv(test_values, TEST_PROBS_OUTPUT_NAME)
+write.csv(test_values, TEST_PROBS_OUTPUT_NAME, row.names = FALSE)
 
 # Values with predicted
 raw_total_values = predict(model_object, as.matrix(total_x))
@@ -86,4 +86,4 @@ total_values = formatted_training_data %>%
   mutate(prob = raw_total_values) %>%
   select(game_play_id, frame_id, hit_hurry_or_sack, prob)
 
-write.csv(total_values, TOTAL_PROBS_OUTPUT_NAME)
+write.csv(total_values, TOTAL_PROBS_OUTPUT_NAME, row.names = FALSE)
