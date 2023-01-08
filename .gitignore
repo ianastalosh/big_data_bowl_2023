@@ -56,4 +56,9 @@ output/plots/rusher_probs_only/**
 
 *.zip
 
+*.DS_Store
+
+notes/**
+unused/**
+
 
