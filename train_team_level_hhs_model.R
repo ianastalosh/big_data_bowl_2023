@@ -67,6 +67,8 @@ dir.create(OUTPUT_DIRECTORY)
 MODEL_OUTPUT_NAME = paste0(OUTPUT_DIRECTORY, '/xgb_model.model')
 TEST_PROBS_OUTPUT_NAME = paste0(OUTPUT_DIRECTORY, '/test_probs.csv')
 TOTAL_PROBS_OUTPUT_NAME = paste0(OUTPUT_DIRECTORY, '/total_probs.csv')
+TRAINING_SUMMARY_OUTPUT_NAME = paste0(OUTPUT_DIRECTORY, '/training_summary.csv')
+MODEL_FEATURE_IMPORTANCE_OUTPUT_NAME = paste0(OUTPUT_DIRECTORY, '/model_feature_importance.csv')
 
 # Save XGB model
 xgb.save(model_object, MODEL_OUTPUT_NAME)
@@ -87,3 +89,18 @@ total_values = formatted_training_data %>%
   select(game_play_id, frame_id, hit_hurry_or_sack, prob)
 
 write.csv(total_values, TOTAL_PROBS_OUTPUT_NAME, row.names = FALSE)
+
+# Show output of training
+xgb_feature_importance = xgb.importance(model=model_object)
+
+best_output = strsplit(model_object$best_msg, split='\t')
+train_ll = strsplit(best_output[[1]][[2]], ':')[[1]][[2]]
+test_ll = strsplit(best_output[[1]][[3]], ':')[[1]][[2]]
+
+training_summary = data.frame(num_train_examples = nrow(training_x),
+                              num_test_examples = nrow(test_x),
+                              train_log_loss = as.numeric(train_ll),
+                              test_log_loss = as.numeric(test_ll))
+
+write.csv(training_summary, TRAINING_SUMMARY_OUTPUT_NAME, row.names = FALSE)
+write.csv(xgb_feature_importance, MODEL_FEATURE_IMPORTANCE_OUTPUT_NAME, row.names = FALSE)

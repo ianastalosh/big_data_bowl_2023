@@ -349,3 +349,4 @@ raw_rusher_level_pressure_probs = read_csv('output/models/rusher_level_hhs_per_f
 # Example (with QB and Rusher pressure probabilities)
 # play1 = generate_play_art_from_game_play_id('2021091203-601', raw_team_level_pressure_probs, raw_rusher_level_pressure_probs, 'output/plots/play-2021091203-601-burrow-sack.gif')
 # play2 = generate_play_art_from_game_play_id('2021092607-2923', raw_team_level_pressure_probs, raw_rusher_level_pressure_probs, 'output/plots/play-2021092607-2923-roethlisberger-protected.gif')
+# play3 = generate_play_art_from_game_play_id('2021110100-1182', raw_team_level_pressure_probs, raw_rusher_level_pressure_probs, 'output/plots/play-2021110100-1182-mahomes-scramble.gif')
