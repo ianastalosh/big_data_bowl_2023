@@ -9,7 +9,8 @@ library(plotly) # Interactive plots
 library(xgboost) # model training
 library(pROC) # Get ROC AUC
 library(ModelMetrics) # Get Brier Score
-library(kableExtra)
+library(kableExtra) # Nice tables
+library(reshape2) # To get the melt function
 
 set.seed(335)
 
