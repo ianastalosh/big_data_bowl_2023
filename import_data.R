@@ -8,6 +8,8 @@ library(magick) # Animated plots
 library(plotly) # Interactive plots 
 library(xgboost) # model training
 
+set.seed(335)
+
 # Import relevant scripts
 source('utils.R')
 source('feature_engineering.R')
@@ -50,4 +52,5 @@ preprocessing_summary = fe_tracking %>%
 
 # Join jersey numbers to the players df
 unique_jersey_numbers = fe_tracking %>% select(nflId, jerseyNumber) %>% distinct()
-players = players %>% left_join(unique_jersey_numbers, by='nflId')
+players = players %>% left_join(unique_jersey_numbers, by='nflId') %>% group_by(nflId) %>% filter(row_number() == 1)
+# Note, some players have worn two numbers - we just include one for simplicity sake

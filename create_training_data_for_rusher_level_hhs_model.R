@@ -9,7 +9,7 @@
 #' (if there are less than 5, fill with 0s)
 
 start = Sys.time()
-NUM_PLAYERS_TO_CONSIDER = 8
+NUM_PLAYERS_TO_CONSIDER = 5
 
 print("--- CREATING FEATURES ----")
 
@@ -58,11 +58,13 @@ model_training_with_values = model_training_data %>%
 
 print('---- RESHAPING INTO ONE ROW PER RUSHER PER FRAME PER PLAY ----')
 
-# Now, this flattens into a matrix with the 6 relevant columns for each player we consider
-flat_features_matrix = model_training_with_values %>% select(x_diff, y_diff, o_diff, dir_diff, a_diff, s_diff) %>% as.matrix()
+FEATURES_PER_PLAYER = c('dist_to_rusher', 'x_diff', 'y_diff', 'o_diff', 'dir_diff', 'a_diff', 's_diff')
+
+# Now, this flattens into a matrix with the 7 relevant columns for each player we consider
+flat_features_matrix = model_training_with_values %>% select(all_of(FEATURES_PER_PLAYER)) %>% as.matrix()
 flat_features_matrix[is.na(flat_features_matrix)] = 0
 
-flat_features = matrix(t(flat_features_matrix), ncol=(1 + 2*NUM_PLAYERS_TO_CONSIDER) * 6, byrow=TRUE)
+flat_features = matrix(t(flat_features_matrix), ncol=(1 + 2*NUM_PLAYERS_TO_CONSIDER) * length(FEATURES_PER_PLAYER), byrow=TRUE)
 
 # rm(flat_features_matrix)
 
@@ -70,9 +72,22 @@ print('---- ATTACHING THE TARGET VARIABLE ----')
 # Attach the hhs variable to determine if they got a hit, hurry or, to be used as the target 
 pff_targets_only = pff %>% filter(pff_role == 'Pass Rush') %>% select(game_play_id, nflId, pff_hit, pff_hurry, pff_sack, hit_hurry_or_sack)
 
-# Join the features to the
+qb_colnames = paste0('qb_', FEATURES_PER_PLAYER)
+blocker_colname_prefix = paste0('blocker', 1:NUM_PLAYERS_TO_CONSIDER_PER_TEAM)
+rusher_colname_prefix = paste0('rusher', 1:NUM_PLAYERS_TO_CONSIDER_PER_TEAM)
+
+blocker_colnames = expand.grid(prefix = blocker_colname_prefix, feature = FEATURES_PER_PLAYER) %>% 
+  arrange(prefix) %>% 
+  mutate(name = paste(prefix, feature, sep='_')) %>% 
+  select(name) %>% unlist() %>% unname() 
+rusher_colnames = str_replace_all(blocker_colnames, 'blocker', 'rusher')
+
+# Join the features to the information
 final_feature_set = cbind(unique_rushers, flat_features) %>% 
   left_join(pff_targets_only, by=c( 'game_play_id', 'rush_id' = 'nflId'))
+colnames(final_feature_set) = c('game_play_id', 'frame_id', 'rush_id',
+                                qb_colnames, blocker_colnames, rusher_colnames,
+                                'pff_hit', 'pff_hurry', 'pff_sack', 'hit_hurry_or_sack')
 
 print('---- WRITING CSV ----')
 
