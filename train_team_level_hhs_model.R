@@ -69,6 +69,8 @@ TEST_PROBS_OUTPUT_NAME = paste0(OUTPUT_DIRECTORY, '/test_probs.csv')
 TOTAL_PROBS_OUTPUT_NAME = paste0(OUTPUT_DIRECTORY, '/total_probs.csv')
 TRAINING_SUMMARY_OUTPUT_NAME = paste0(OUTPUT_DIRECTORY, '/training_summary.csv')
 MODEL_FEATURE_IMPORTANCE_OUTPUT_NAME = paste0(OUTPUT_DIRECTORY, '/model_feature_importance.csv')
+PRETTY_TRAINING_SUMMARY_TEAM_FILEPATH = paste0(OUTPUT_DIRECTORY, '/kable_team_training_summary.png')
+PRETTY_FEATURE_IMPORTANCE_TEAM_FILEPATH = paste0(OUTPUT_DIRECTORY, '/kable_team_feature_importance.png')
 
 # Save XGB model
 xgb.save(model_object, MODEL_OUTPUT_NAME)
@@ -97,10 +99,36 @@ best_output = strsplit(model_object$best_msg, split='\t')
 train_ll = strsplit(best_output[[1]][[2]], ':')[[1]][[2]]
 test_ll = strsplit(best_output[[1]][[3]], ':')[[1]][[2]]
 
+# Create roc curve
+roc_object = roc(test_values$hit_hurry_or_sack, test_values$prob)
+auc = pROC::auc(roc_object)
+brier_score = brier(test_values$hit_hurry_or_sack, test_values$prob)
+
 training_summary = data.frame(num_train_examples = nrow(training_x),
                               num_test_examples = nrow(test_x),
                               train_log_loss = as.numeric(train_ll),
-                              test_log_loss = as.numeric(test_ll))
+                              test_log_loss = as.numeric(test_ll),
+                              test_roc_auc = auc,
+                              test_brier_score = brier_score)
 
 write.csv(training_summary, TRAINING_SUMMARY_OUTPUT_NAME, row.names = FALSE)
 write.csv(xgb_feature_importance, MODEL_FEATURE_IMPORTANCE_OUTPUT_NAME, row.names = FALSE)
+
+# Write kable tables
+kable_training_summary = training_summary %>% 
+  rename(`Num. Training Examples` = num_train_examples,
+         `Num. Test Examples` = num_test_examples,
+         `Train Log Loss` = train_log_loss,
+         `Test Log Loss` = test_log_loss,
+         `Test ROC AUC` = test_roc_auc,
+         `Test Brier Score` = test_brier_score) %>%
+  kbl(caption = 'Team Model Training Summary') %>%
+  kable_material(c('striped'))
+
+save_kable(kable_training_summary, PRETTY_TRAINING_SUMMARY_TEAM_FILEPATH, zoom=2)
+
+kable_feature_importance = xgb_feature_importance[1:10, ] %>%
+  kbl(caption='Team Model Feature Importance') %>%
+  kable_material(c('striped'))
+
+save_kable(kable_feature_importance, PRETTY_FEATURE_IMPORTANCE_TEAM_FILEPATH, zoom=2)
