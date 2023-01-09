@@ -20,16 +20,18 @@ team_level_pressure_probs = play_metadata %>%
   left_join(raw_team_level_pressure_probs, by='game_play_id') %>%
   group_by(game_play_id) %>% 
   filter(!is.na(frame_id)) %>% 
-  mutate(adjusted_frame = frame_id - min(frame_id) + 1,
-         seconds_after_snap = adjusted_frame / 10) # Rescale so the 1st frame after snap is now '1'
+  mutate(adjusted_frame = frame_id - min(frame_id) + 1,  # Rescale so the 1st frame after snap is now '1'
+         seconds_after_snap = adjusted_frame / 10,
+         frame_weight = 1 / (1 + (adjusted_frame / 11.13)^2.14))
 
 rusher_level_pressure_probs = play_metadata %>%
   left_join(raw_rusher_level_pressure_probs, by='game_play_id') %>% 
   left_join(players, by=c('rush_id' = 'nflId')) %>%
   group_by(game_play_id) %>% 
   filter(!is.na(frame_id)) %>% 
-  mutate(adjusted_frame = frame_id - min(frame_id) + 1,
-         seconds_after_snap = adjusted_frame / 10) # Rescale so the 1st frame after snap is now '1'
+  mutate(adjusted_frame = frame_id - min(frame_id) + 1, # Rescale so the 1st frame after snap is now '1'
+         seconds_after_snap = adjusted_frame / 10,
+         frame_weight = 1 / (1 + (adjusted_frame / 11.13)^2.14)) 
 
 # TEAM LEVEL
 
@@ -43,7 +45,7 @@ frame_average = team_level_pressure_probs %>%
 
 pressure_by_frame_plot = ggplot(frame_average, aes(x = seconds_after_snap, y=avg_prob)) + 
   geom_point(aes(size = num_plays), color = 'darkorchid3', alpha = 0.3) + 
-  geom_point(data=team_level_pressure_probs, aes(x=seconds_after_snap, y=prob), colour='grey', alpha=0.01) +
+  # geom_point(data=team_level_pressure_probs, aes(x=seconds_after_snap, y=prob), colour='grey', alpha=0.01) +
   theme_minimal() + 
   labs(title = 'Avg. QB Pressure As Play Progresses',
        x = 'Seconds After Snap',
@@ -55,8 +57,6 @@ ggsave(paste0(OUTPUT_DIRECTORY, '/avg_pressure_over_time.png'), pressure_by_fram
 ## COMPUTATION OF COERCE ## 
 # Compute weighted average by team
 coerce_by_defense = team_level_pressure_probs %>%
-  # mutate(frame_weight = 1/(0.05 * adjusted_frame + 1)) %>%
-  mutate(frame_weight = 1 / (1 + (adjusted_frame / 11.13)^2.14)) %>%
   group_by(defense) %>%
   summarize(unique_plays = length(unique(game_play_id)), 
             average_prob = mean(prob),
@@ -68,8 +68,6 @@ coerce_by_defense = team_level_pressure_probs %>%
 
 
 coerce_by_offense = team_level_pressure_probs %>%
-  # mutate(frame_weight = 1/(0.05 * adjusted_frame + 1)) %>%
-  mutate(frame_weight = 1 / (1 + (adjusted_frame / 11.13)^2.14)) %>%
   group_by(offense) %>%
   summarize(unique_plays = length(unique(game_play_id)), 
             average_prob = mean(prob),
@@ -80,9 +78,7 @@ coerce_by_offense = team_level_pressure_probs %>%
   mutate(coerce_ranking = row_number())
 
 coerce_by_pass_rusher = rusher_level_pressure_probs %>%
-  # mutate(frame_weight = 1/(0.05 * adjusted_frame + 1)) %>%
-  mutate(frame_weight = 1 / (1 + (adjusted_frame / 11.13)^2.14)) %>%
-  group_by(rush_id, displayName, officialPosition) %>%
+  group_by(rush_id, displayName, team, officialPosition) %>%
   summarize(unique_plays = length(unique(game_play_id)), 
             time_spent_on_pass_rush = n()/0.1, 
             average_prob = mean(prob),
@@ -134,6 +130,7 @@ save_kable(offense_coerce_kable, COERCE_OFFENSE_RANKINGS_FILEPATH, zoom = 2)
 
 pass_rusher_coerce_kable = top_5_per_position %>%
   select(`Player` = displayName,
+         `Team` = team,
          `Position` = officialPosition,
          `Unique Plays` = unique_plays,
          `Avg. Pressure` = average_prob,
@@ -142,10 +139,55 @@ pass_rusher_coerce_kable = top_5_per_position %>%
          `COERCE Ranking in Position` = coerce_ranking_for_position) %>%
   kbl(caption = 'COERCE Ratings by Individual Pass Rusher, per Position (min 10 plays)') %>%
   kable_material(c('striped')) %>%
-  column_spec(6, color = 'white', background = spec_color(top_5_per_position$coerce, end = 0.7, option='C', direction = 1)) %>% 
-  column_spec(7, color = 'white', background = spec_color(top_5_per_position$coerce_ranking_for_position, end = 0.7, option='C', direction=-1)) 
+  column_spec(7, color = 'white', background = spec_color(top_5_per_position$coerce, end = 0.7, option='C', direction = 1)) %>% 
+  column_spec(8, color = 'white', background = spec_color(top_5_per_position$coerce_ranking_for_position, end = 0.7, option='C', direction=-1)) 
 
 save_kable(pass_rusher_coerce_kable, COERCE_PASS_RUSHER_RANKINGS_FILEPATH, zoom = 2)
 
+# COERCE on play
+sample_play_team_coerce = team_level_pressure_probs %>%
+  filter(game_play_id == SAMPLE_PLAY) %>% 
+  group_by(game_play_id, defense) %>%
+  summarize(unique_plays = length(unique(game_play_id)), 
+            average_prob = mean(prob),
+            coerce = sum(prob * frame_weight) / sum(frame_weight))
 
-           
+sample_play_rusher_coerce = rusher_level_pressure_probs %>%
+  filter(game_play_id == SAMPLE_PLAY) %>% 
+  group_by(game_play_id, rush_id, jerseyNumber) %>%
+  summarize(unique_plays = length(unique(game_play_id)), 
+            average_prob = mean(prob),
+            coerce = sum(prob * frame_weight) / sum(frame_weight))
+
+# Compute COERCE for all plays
+all_plays_team_coerce = team_level_pressure_probs %>%
+  group_by(game_play_id, defense, hit_hurry_or_sack) %>%
+  summarize(unique_plays = length(unique(game_play_id)), 
+            average_prob = mean(prob),
+            coerce = sum(prob * frame_weight) / sum(frame_weight))
+
+all_plays_rusher_coerce = rusher_level_pressure_probs %>%
+  group_by(game_play_id, rush_id, jerseyNumber, hit_hurry_or_sack) %>%
+  summarize(unique_plays = length(unique(game_play_id)), 
+            average_prob = mean(prob),
+            coerce = sum(prob * frame_weight) / sum(frame_weight))
+
+write.csv(all_plays_team_coerce, paste0(OUTPUT_DIRECTORY, '/play_team_coerce.csv'), row.names=FALSE)
+write.csv(all_plays_rusher_coerce, paste0(OUTPUT_DIRECTORY, '/play_rusher_coerce.csv'), row.names=FALSE)
+
+# Output example plays and coerce calculations
+SAMPLE_PLAY1 = '2021091203-601'
+sample_play_art1 = generate_play_art_from_game_play_id(SAMPLE_PLAY1, raw_team_level_pressure_probs, raw_rusher_level_pressure_probs, 'output/plots/play-2021091203-601-burrow-pressure.gif')
+team_coerce_on_play1 = all_plays_team_coerce %>% filter(game_play_id == SAMPLE_PLAY1)
+rusher_coerce_on_play1 = all_plays_rusher_coerce %>% filter(game_play_id == SAMPLE_PLAY1)
+
+write.csv(team_coerce_on_play1, paste0(OUTPUT_DIRECTORY, '/play-', SAMPLE_PLAY1, '-team-level-coerce.csv'), row.names = FALSE)
+write.csv(rusher_coerce_on_play1, paste0(OUTPUT_DIRECTORY, '/play-', SAMPLE_PLAY1, '-rusher-level-coerce.csv'), row.names = FALSE)
+
+SAMPLE_PLAY2 = '2021090900-2279'
+sample_play_art2 = generate_play_art_from_game_play_id(SAMPLE_PLAY2, raw_team_level_pressure_probs, raw_rusher_level_pressure_probs, 'output/plots/play-2021090900-2279-dak-late-pressure.gif')
+team_coerce_on_play2 = all_plays_team_coerce %>% filter(game_play_id == SAMPLE_PLAY2)
+rusher_coerce_on_play2 = all_plays_rusher_coerce %>% filter(game_play_id == SAMPLE_PLAY2)
+
+write.csv(team_coerce_on_play2, paste0(OUTPUT_DIRECTORY, '/play-', SAMPLE_PLAY2, '-team-level-coerce.csv'), row.names = FALSE)
+write.csv(rusher_coerce_on_play2, paste0(OUTPUT_DIRECTORY, '/play-', SAMPLE_PLAY2, '-rusher-level-coerce.csv'), row.names = FALSE)
