@@ -196,3 +196,17 @@ rusher_coerce_on_play3 = all_plays_rusher_coerce %>% filter(game_play_id == SAMP
 
 write.csv(team_coerce_on_play3, paste0(OUTPUT_DIRECTORY, '/play-', SAMPLE_PLAY3, '-team-level-coerce.csv'), row.names = FALSE)
 write.csv(rusher_coerce_on_play3, paste0(OUTPUT_DIRECTORY, '/play-', SAMPLE_PLAY3, '-rusher-level-coerce.csv'), row.names = FALSE)
+
+# Kable output of play 3 for use in report
+combined_play3_table = bind_rows(
+  team_coerce_on_play3 %>% ungroup() %>% mutate(rush_id = defense, jerseyNumber = defense) %>% select(game_play_id, rush_id, jerseyNumber, average_prob, coerce),
+  rusher_coerce_on_play3 %>% mutate(rush_id = as.character(rush_id), jerseyNumber = as.character(jerseyNumber)) %>% select(game_play_id, rush_id, jerseyNumber, average_prob, coerce)) %>%
+  select(`Game Play ID` = game_play_id, `Rusher ID` = rush_id, `Number` = jerseyNumber, `Avg Pressure` = average_prob, `COERCE` = coerce)
+
+combined_play3_kable = combined_play3_table %>%
+  kbl(caption='Pressure and COERCE on Play 2021091212-2857') %>% 
+  kable_material(c('striped')) %>%
+  column_spec(5, color = 'white', background = spec_color(combined_play3_table$COERCE, end = 0.7, option='C', direction = 1))
+
+COERCE_PLAY_EXAMPLE_FILEPATH = paste0(OUTPUT_DIRECTORY, '/sample_play_2021091212_2857_coerce.png')
+save_kable(combined_play3_kable, COERCE_PLAY_EXAMPLE_FILEPATH, zoom = 2)
