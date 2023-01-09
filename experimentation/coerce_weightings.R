@@ -21,3 +21,16 @@ weighting_functions = ggplot(melt_for_plotting, aes(x = frame, y = value)) +
 
 OUTPUT_WEIGHTING_FUNCTIONS_FILEPATH = 'output/plots/coerce_plots/different_weighting_functions.png'
 ggsave(OUTPUT_WEIGHTING_FUNCTIONS_FILEPATH, weighting_functions, height=6, width=8, bg='white')
+
+# Plot only the DLL function
+dll_weighting = ggplot(frame_weight_df, aes(x = frame, y = dll)) + 
+  geom_line(linewidth = 1, colour='purple') + 
+  theme_minimal() + 
+  labs(title = 'Downward Log Logistic Function',
+       subtitle = 'To be used for weighting pressure throughout the play',
+       x = 'Frame',
+       y = 'Weight')
+
+DLL_WEIGHTING_FUNCTIONS_FILEPATH = 'output/plots/coerce_plots/dll_weighting_function.png'
+ggsave(DLL_WEIGHTING_FUNCTIONS_FILEPATH, dll_weighting, height=6, width=8, bg='white')
+
