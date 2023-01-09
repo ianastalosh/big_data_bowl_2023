@@ -110,12 +110,12 @@ kable_training_summary = training_summary %>%
          `Test ROC AUC` = test_roc_auc,
          `Test Brier Score` = test_brier_score) %>%
   kbl(caption = 'Rusher Model Training Summary') %>%
-  kable_material(c('striped'))
+  kable_material(c('striped'), font_size=20)
 
 save_kable(kable_training_summary, PRETTY_TRAINING_SUMMARY_RUSHER_FILEPATH, zoom=2)
 
 kable_feature_importance = xgb_feature_importance[1:10, ] %>%
   kbl(caption = 'Rusher Model Feature Importance') %>%
-  kable_material(c('striped'))
+  kable_material(c('striped'), font_size=20)
 
 save_kable(kable_feature_importance, PRETTY_FEATURE_IMPORTANCE_RUSHER_FILEPATH, zoom=2)
