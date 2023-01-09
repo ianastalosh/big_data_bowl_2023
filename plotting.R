@@ -271,7 +271,7 @@ plot_play_with_pressure_probability = function(game_id, play_id,
     # Add title containing play information
     labs(title = paste0("Play ", game_id, '-', play_id, '. ', game_state),
          subtitle = play_description,
-         fill = 'Pressure Prob') + 
+         fill = 'Pressure') + 
     
     # Add animations
     transition_time(frameId)
@@ -285,11 +285,11 @@ plot_play_with_pressure_probability = function(game_id, play_id,
   probability_plot = ggplot(probability_df_side_plot, aes(x = frameId, y = prob)) + 
     theme_minimal() + 
     geom_line(aes(colour=jerseyNumber), size = 1.5) +
-    labs(title = 'Hit, Hurry or Sack Probability Throughout Play',
-         subtitle = 'For the QB, Prob of Getting Pressured on the Play',
+    labs(title = 'Pressure Exerted by Each Pass Rusher Throughout Play',
+         subtitle = 'For the QB, Amount of Pressure from the Whole Defense',
          x = 'Frame',
-         y = 'Pressure Probability',
-         colour = 'Player Pressure Probability') +
+         y = 'Pressure',
+         colour = 'Player') +
     ylim(c(0,1)) +
     scale_colour_discrete(limits = unique(probability_df_side_plot$jerseyNumber)) +
     geom_vline(xintercept = snap_frame, colour = 'red', linetype = 'dashed', size = 0.5) + 
@@ -355,4 +355,4 @@ generate_play_art_from_game_play_id = function(input_game_play_id, team_level_df
 # Example (with QB and Rusher pressure probabilities)
 # play1 = generate_play_art_from_game_play_id('2021091203-601', raw_team_level_pressure_probs, raw_rusher_level_pressure_probs, 'output/plots/play-2021091203-601-burrow-sack.gif')
 # play2 = generate_play_art_from_game_play_id('2021092607-2923', raw_team_level_pressure_probs, raw_rusher_level_pressure_probs, 'output/plots/play-2021092607-2923-roethlisberger-protected.gif')
-# play3 = generate_play_art_from_game_play_id('2021110100-1182', raw_team_level_pressure_probs, raw_rusher_level_pressure_probs, 'output/plots/play-2021110100-1182-mahomes-scramble.gif')
+# play3 = generate_play_art_from_game_play_id('2021110100-1182', raw_team_level_pressure_probs, raw_rusher_level_pressure_probs, 'output/plots/play-2021110100-1182-mahomes-scramble-updated.gif')
