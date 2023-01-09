@@ -108,7 +108,7 @@ defense_coerce_kable = coerce_by_defense %>%
          `COERCE` = coerce,
          `COERCE Ranking` = coerce_ranking) %>%
   kbl(caption = 'COERCE Ratings by Defensive Unit') %>%
-  kable_material(c('striped')) %>%
+  kable_material(c('striped'), font_size=20) %>%
   column_spec(5, color = 'white', background = spec_color(coerce_by_defense$coerce, end = 0.7, option='C')) %>% 
   column_spec(6, color = 'white', background = spec_color(coerce_by_defense$coerce_ranking, end = 0.7, option='C', direction=-1)) 
 
@@ -122,7 +122,7 @@ offense_coerce_kable = coerce_by_offense %>%
          `COERCE Allowed` = coerce,
          `COERCE Ranking` = coerce_ranking) %>%
   kbl(caption = 'COERCE Ratings by Offensive Line (ie. which offenses allow early pressure)') %>%
-  kable_material(c('striped')) %>%
+  kable_material(c('striped'), font_size=20) %>%
   column_spec(5, color = 'white', background = spec_color(coerce_by_offense$coerce, end = 0.7, option='C', direction = -1)) %>% 
   column_spec(6, color = 'white', background = spec_color(coerce_by_offense$coerce_ranking, end = 0.7, option='C', direction=-1)) 
 
@@ -138,7 +138,7 @@ pass_rusher_coerce_kable = top_5_per_position %>%
          `COERCE` = coerce,
          `COERCE Ranking in Position` = coerce_ranking_for_position) %>%
   kbl(caption = 'COERCE Ratings by Individual Pass Rusher, per Position (min 10 plays)') %>%
-  kable_material(c('striped')) %>%
+  kable_material(c('striped'), font_size=20) %>%
   column_spec(7, color = 'white', background = spec_color(top_5_per_position$coerce, end = 0.7, option='C', direction = 1)) %>% 
   column_spec(8, color = 'white', background = spec_color(top_5_per_position$coerce_ranking_for_position, end = 0.7, option='C', direction=-1)) 
 
@@ -205,7 +205,7 @@ combined_play3_table = bind_rows(
 
 combined_play3_kable = combined_play3_table %>%
   kbl(caption='Pressure and COERCE on Play 2021091212-2857') %>% 
-  kable_material(c('striped')) %>%
+  kable_material(c('striped'), font_size=20) %>%
   column_spec(5, color = 'white', background = spec_color(combined_play3_table$COERCE, end = 0.7, option='C', direction = 1))
 
 COERCE_PLAY_EXAMPLE_FILEPATH = paste0(OUTPUT_DIRECTORY, '/sample_play_2021091212_2857_coerce.png')
