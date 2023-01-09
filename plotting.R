@@ -242,7 +242,7 @@ plot_play_with_pressure_probability = function(game_id, play_id,
   # Get relevant information
   play_description = play_metadata$playDescription
   yardline_100 = ifelse(play_metadata$possessionTeam == play_metadata$yardlineSide, 100 - play_metadata$yardlineNumber, play_metadata$yardlineNumber)
-  game_state = paste0('Q', play_metadata$quarter, ', Yds to EndZone: ', yardline_100, '. ', play_metadata$down, ' & ', play_metadata$yardsToGo, 'ydstogo')
+  game_state = paste0('Q', play_metadata$quarter, ', Yds to EndZone: ', yardline_100, '. ', play_metadata$down, ' & ', play_metadata$yardsToGo, ' ydstogo')
   
   dot_plot = ggplot(tracking_data, aes(x = yNorm, y = xNorm)) +
     vertical_field_theme() + 
