@@ -241,7 +241,13 @@ plot_play_with_pressure_probability = function(game_id, play_id,
   #### PLOT 1 - THE DOT PLOT
   # Get relevant information
   play_description = play_metadata$playDescription
-  yardline_100 = ifelse(play_metadata$possessionTeam == play_metadata$yardlineSide, 100 - play_metadata$yardlineNumber, play_metadata$yardlineNumber)
+  
+  if (is.na(play_metadata$yardlineSide)) {
+    yardline_100 = 50
+  } else {
+    yardline_100 = ifelse(play_metadata$possessionTeam == play_metadata$yardlineSide, 100 - play_metadata$yardlineNumber, play_metadata$yardlineNumber)
+  }
+  
   game_state = paste0('Q', play_metadata$quarter, ', Yds to EndZone: ', yardline_100, '. ', play_metadata$down, ' & ', play_metadata$yardsToGo, ' ydstogo')
   
   dot_plot = ggplot(tracking_data, aes(x = yNorm, y = xNorm)) +
@@ -339,8 +345,8 @@ generate_play_art_from_game_play_id = function(input_game_play_id, team_level_df
   return(play_art)
 }
 
-raw_team_level_pressure_probs = read_csv('output/models/team_level_hhs_per_frame_20230107_224414/total_probs.csv')
-raw_rusher_level_pressure_probs = read_csv('output/models/rusher_level_hhs_per_frame_20230108_131603/total_probs.csv')
+# raw_team_level_pressure_probs = read_csv('output/models/team_level_hhs_per_frame_20230107_224414/total_probs.csv')
+# raw_rusher_level_pressure_probs = read_csv('output/models/rusher_level_hhs_per_frame_20230108_131603/total_probs.csv')
 
 # Example (play only)
 # play1_vert = plot_play_dots(2021090900, 97, vert=TRUE)

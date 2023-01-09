@@ -189,5 +189,10 @@ sample_play_art2 = generate_play_art_from_game_play_id(SAMPLE_PLAY2, raw_team_le
 team_coerce_on_play2 = all_plays_team_coerce %>% filter(game_play_id == SAMPLE_PLAY2)
 rusher_coerce_on_play2 = all_plays_rusher_coerce %>% filter(game_play_id == SAMPLE_PLAY2)
 
-write.csv(team_coerce_on_play2, paste0(OUTPUT_DIRECTORY, '/play-', SAMPLE_PLAY2, '-team-level-coerce.csv'), row.names = FALSE)
-write.csv(rusher_coerce_on_play2, paste0(OUTPUT_DIRECTORY, '/play-', SAMPLE_PLAY2, '-rusher-level-coerce.csv'), row.names = FALSE)
+SAMPLE_PLAY3 = '2021091212-2857'
+sample_play_art3 = generate_play_art_from_game_play_id(SAMPLE_PLAY3, raw_team_level_pressure_probs, raw_rusher_level_pressure_probs, 'output/plots/play-2021091212-2857-daniel-jones-central-pressure.gif')
+team_coerce_on_play3 = all_plays_team_coerce %>% filter(game_play_id == SAMPLE_PLAY3)
+rusher_coerce_on_play3 = all_plays_rusher_coerce %>% filter(game_play_id == SAMPLE_PLAY3)
+
+write.csv(team_coerce_on_play3, paste0(OUTPUT_DIRECTORY, '/play-', SAMPLE_PLAY3, '-team-level-coerce.csv'), row.names = FALSE)
+write.csv(rusher_coerce_on_play3, paste0(OUTPUT_DIRECTORY, '/play-', SAMPLE_PLAY3, '-rusher-level-coerce.csv'), row.names = FALSE)
